@@ -31,8 +31,21 @@ def extraer_fecha_creacion(ruta_archivo):
         return('sin fecha')
 
 
+def calc_peso_carpeta(ruta_carpeta):
+    total_size = 0
+    for dirpath, dirnames, filenames in os.walk(ruta_carpeta):
+        for file in filenames:
+            filepath = join(dirpath, file)
+            total_size += os.path.getsize(filepath)
+    str_total_size = str(round(total_size/1024)) + ' KB'
+    return str_total_size
+
+
 def llenar_indice_electronico(ruta_carpeta_interna, contenido_carpeta_interna, ruta_indice):
     nombre_carpeta_interna = ruta_carpeta_interna.split("\\")[-1]
+    # Separamos las carpetas de la carpeta interna de los archivos de la carpeta interna
+    carpetas_carpeta_interna = [nombre for nombre in contenido_carpeta_interna if os.path.isdir(join(ruta_carpeta_interna, nombre))]
+    archivos_carpeta_interna = [nombre for nombre in contenido_carpeta_interna if not os.path.isdir(join(ruta_carpeta_interna, nombre))]
     # Cargamos el indice electronico y seleccionamos la hoja
     wb = load_workbook(ruta_indice)
     sheet = wb.active
@@ -51,7 +64,7 @@ def llenar_indice_electronico(ruta_carpeta_interna, contenido_carpeta_interna, r
                     top=Side(border_style='thin',color='000000'),
                     bottom=Side(border_style='thin',color='000000')
                     )
-    for index, arch_carpeta_interna in enumerate(contenido_carpeta_interna):
+    for index, arch_carpeta_interna in enumerate(carpetas_carpeta_interna + archivos_carpeta_interna):
         ruta_archivo = join(ruta_carpeta_interna, arch_carpeta_interna)
         fila = fila_inicial + index
         extension_archivo = (arch_carpeta_interna.split(".")[-1])
@@ -92,11 +105,18 @@ def llenar_indice_electronico(ruta_carpeta_interna, contenido_carpeta_interna, r
             sheet['E'+ str(fila)] = '__'
             sheet['F'+ str(fila)] = '__'
             sheet['G'+ str(fila)] = '__'
-        # Formato
-        sheet['H'+ str(fila)] = extension_archivo.upper()
-        # Peso
-        peso_archivo = str(round((os.path.getsize(ruta_archivo))/1024)) + ' KB'
-        sheet['I'+ str(fila)] = peso_archivo
+        # Formato y Peso
+        if os.path.isdir(ruta_archivo):
+            # Formato carpetas
+            sheet['H'+ str(fila)] = "CARPETA"
+            # Peso carpetas
+            sheet['I'+ str(fila)] = calc_peso_carpeta(ruta_archivo)
+        else:
+            # Formato archivos
+            sheet['H'+ str(fila)] = extension_archivo.upper()
+            # Peso archivos
+            peso_archivo = str(round((os.path.getsize(ruta_archivo))/1024)) + ' KB'
+            sheet['I'+ str(fila)] = peso_archivo
         # Origen
         sheet['J'+ str(fila)] = origen
         # Alineacion de Celdas
