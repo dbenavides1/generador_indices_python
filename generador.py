@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Para crear el ejecutable:
+# pyinstaller --onefile --name NOMBRE --noconsole --icon NOMBRE_ICONO generador.py
+# formato_indice.xlsx y la carpeta de procesos deben estar en la misma carpeta que el ejecutable
 import os, shutil
 import PyPDF2
 import tkinter
@@ -43,9 +46,8 @@ def calc_peso_carpeta(ruta_carpeta):
 
 def llenar_indice_electronico(ruta_carpeta_interna, contenido_carpeta_interna, ruta_indice):
     nombre_carpeta_interna = ruta_carpeta_interna.split("\\")[-1]
-    # Separamos las carpetas de la carpeta interna de los archivos de la carpeta interna
-    carpetas_carpeta_interna = [nombre for nombre in contenido_carpeta_interna if os.path.isdir(join(ruta_carpeta_interna, nombre))]
-    archivos_carpeta_interna = [nombre for nombre in contenido_carpeta_interna if not os.path.isdir(join(ruta_carpeta_interna, nombre))]
+    # Ordenamos la lista por nombre
+    contenido_carpeta_interna.sort()
     # Cargamos el indice electronico y seleccionamos la hoja
     wb = load_workbook(ruta_indice)
     sheet = wb.active
@@ -64,7 +66,7 @@ def llenar_indice_electronico(ruta_carpeta_interna, contenido_carpeta_interna, r
                     top=Side(border_style='thin',color='000000'),
                     bottom=Side(border_style='thin',color='000000')
                     )
-    for index, arch_carpeta_interna in enumerate(carpetas_carpeta_interna + archivos_carpeta_interna):
+    for index, arch_carpeta_interna in enumerate(contenido_carpeta_interna):
         ruta_archivo = join(ruta_carpeta_interna, arch_carpeta_interna)
         fila = fila_inicial + index
         extension_archivo = (arch_carpeta_interna.split(".")[-1])
